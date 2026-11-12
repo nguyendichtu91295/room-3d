@@ -50,7 +50,8 @@ box(57,31,3,dx,105,dz-10,'#242b2d');box(52,26,1,dx,105,dz-8,'#556a82');box(3,12,
 box(45,7,44,24,45,front-34,'#292f31');box(43,48,6,24,70,front-11,'#303638');box(5,38,5,24,22,front-32,'#353a3b');box(57,4,5,24,5,front-32,'#303638');
 box(58,14,58,w/2-45,30,front+25,'#379b79');box(58,57,16,w/2-45,58,front+51,'#49ad8d');for(const x of[w/2-69,w/2-21])box(3,25,3,x,12,front+28,'#3c4140');
 // Entry wall: dark door, air conditioner, drawers and socket from reverse photos.
-const doorZ=front+62,doorHeight=210,doorWidth=80,wallX=w/2-2;
+// Measured door leaf: 97 cm wide, starting 34 cm beyond the loft front.
+const doorWidth=97,doorLoftGap=34,doorHeight=210,doorZ=front+doorLoftGap+doorWidth/2,wallX=w/2-2;
 box(5,doorHeight+8,doorWidth+9,wallX,doorHeight/2+2,doorZ,'#392f29');
 box(6,doorHeight,doorWidth,wallX-1,doorHeight/2,doorZ,'#594538');
 for(let z=doorZ-doorWidth/2+4;z<doorZ+doorWidth/2;z+=9)line([[wallX-4.1,5,z],[wallX-4.1,doorHeight-4,z]],'#513e32');
@@ -59,7 +60,9 @@ for(const y of[30,107,187])box(3,12,2,wallX-5,y,doorZ-doorWidth/2+1,'#a5a29a');
 box(17,29,79,w/2-8,265,doorZ,'#eeeae1');box(18,8,69,w/2-8,254,doorZ,'#4e5551');
 for(let y=252;y<258;y+=2)box(19,0.6,66,w/2-8,y,doorZ,'#a9ada7');
 const {cabinetWidth:bw,cabinetDepth:bd,cabinetHeight:bh}=values;
-const bx=w/2-bd/2-3,bz=doorZ+doorWidth/2+bw/2+13;
+// Put the cabinet top against the right wall and 1 cm off the end wall.
+// The top overhang is included so it remains beyond the door frame.
+const bx=w/2-(bd+2)/2,bz=l/2-(bw+2)/2-1;
 box(bd,bh-6,bw,bx,bh/2+3,bz,'#69432d');box(bd+2,3,bw+2,bx,bh+1,bz,'#9c6a40');
 box(bd-3,5,bw-4,bx,3,bz,'#242825');
 for(let row=0;row<4;row++){

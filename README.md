@@ -59,6 +59,7 @@ All dimensions are in centimetres.
 | Closet clearance from wall | 5 |
 | Closet-to-loft gap / proposed stair run | 120 |
 | Proposed stair width | 50 |
+| Entry door leaf width / gap from loft front to near leaf edge | 97 / 34 |
 | Drawer cabinet length × depth × height | 100 × 38 × 85 |
 | Desk width / leg thickness | 223 / 6 |
 | Under-desk cabinets | Two, each 40 cm wide |
@@ -101,3 +102,5 @@ vercel deploy --prod --scope coding-challenge
 ```
 
 Skip login and linking if this machine is already authenticated and this folder is linked. `vercel.json` uses `npm ci`, `npm run build`, and `dist`, matching the setup in `nguyendichtu91295/bpm-counter`. No environment variables are required. `.vercel/`, `.env*`, build output, and dependencies are Git-ignored. `.vercelignore` excludes local documentation and debugging scripts from deployment uploads.
+
+The entry door leaf is 97 cm wide, with its near edge 34 cm from the loft front. The surrounding frame is still estimated (9 cm wider overall). Drawer cabinet is against the right wall, with its tabletop 1 cm from the end wall. At the default room dimensions, this leaves 9 cm between the door leaf far edge and cabinet top, or 4.5 cm from the estimated door frame, preventing overlap with the doorway.
