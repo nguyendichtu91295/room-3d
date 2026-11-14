@@ -16,7 +16,7 @@ npm run dev
 
 If you are already inside `room-3d`, skip the `cd` command. Open **http://localhost:5173/**, or the Local URL printed by Vite if that port is occupied. Changes to the source reload automatically. Press **Ctrl+C** in the terminal to stop the server.
 
-To open the viewer on another device on the same network:
+Development and preview servers bind to `0.0.0.0` by default so the VM host and other devices can reach them. To start development explicitly on all interfaces:
 
 ```sh
 npm run dev -- --host 0.0.0.0
@@ -104,3 +104,11 @@ vercel deploy --prod --scope coding-challenge
 Skip login and linking if this machine is already authenticated and this folder is linked. `vercel.json` uses `npm ci`, `npm run build`, and `dist`, matching the setup in `nguyendichtu91295/bpm-counter`. No environment variables are required. `.vercel/`, `.env*`, build output, and dependencies are Git-ignored. `.vercelignore` excludes local documentation and debugging scripts from deployment uploads.
 
 The entry door leaf is 97 cm wide, with its near edge 34 cm from the loft front. The surrounding frame is still estimated (9 cm wider overall). Drawer cabinet is against the right wall, with its tabletop 1 cm from the end wall. At the default room dimensions, this leaves 9 cm between the door leaf far edge and cabinet top, or 4.5 cm from the estimated door frame, preventing overlap with the doorway.
+
+## Human reference
+
+The Human reference dropdown offers standing mid-room, climbing the storage stair, climbing the wall-mounted steps, or no person. The dimensional mannequin is **170 cm tall when upright**, with **25 cm long feet**. Other proportions are approximate. Climbing choices select the matching stair version. Use the lower-foot slider to inspect successive pairs of steps. This is a posed scale reference, not a walking animation or a balance simulation. Posing bends the knees without rescaling the person. The summary reports tread overhang and any head position above the ceiling. Furniture visibility does not hide the person. Reset restores the standing person; export includes the selected pose and dimensions.
+
+Run human geometry checks with `node --test tests/human.test.js`. They verify upright height, foot length and contact with successive treads for all supported step counts.
+
+Chrome debugging uses the persistent profile in `~/.cache/room-3d-chrome`, launched by `bash scripts/chrome-debug.sh`. Codex's `chrome-devtools` connection points directly to `http://127.0.0.1:9222`; restart/reload the MCP connection after changing its configuration. Keep the Chrome process running for continued debugging.
