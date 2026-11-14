@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import {Box3,Vector3,Group,Mesh,BoxGeometry,MeshBasicMaterial} from 'three';
 import {createChair,chairPlacement,findIntersections} from '../src/chair.js';
 import {createHuman} from '../src/human.js';
+import {DESK} from '../src/desk.js';
 const dimensions={roomWidth:223,roomLength:383,loftDepth:140,deck:180,run:120,width:50,steps:5};
 const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<0.001);
-for(const position of ['original','tucked'])test(`${position}: seated feet stay on the floor with unscaled legs`,()=>{
+for(const position of ['original','tucked','ladder-desk'])test(`${position}: seated feet stay on the floor with unscaled legs`,()=>{
   const placement=chairPlacement(position,dimensions);
   const chair=createChair(placement),person=createHuman({...dimensions,mode:'seated-'+position,chair:placement});
   near(new Box3().setFromObject(chair).max.y,69);
@@ -13,6 +14,22 @@ for(const position of ['original','tucked'])test(`${position}: seated feet stay 
   near(new Box3().setFromObject(person.getObjectByName('support-foot')).min.y,0);
   near(new Box3().setFromObject(person.getObjectByName('head')).max.y,106);
   for(const part of person.children.filter(p=>p.name==='thigh'||p.name==='shin'))near(part.geometry.parameters.height,37);
+});
+test('chair and seated person fit between the 60 cm desk and original ladder',()=>{
+ const placement=chairPlacement('ladder-desk',dimensions);
+ const chair=createChair(placement,{seatHeight:32}),person=createHuman({...dimensions,mode:'seated-ladder-desk',chair:placement});
+ const deskZ=-dimensions.roomLength/2+DESK.centerFromBack,ladderZ=-dimensions.roomLength/2+dimensions.loftDepth-4;
+ const desk=new Group();desk.name='desk';const top=new Mesh(new BoxGeometry(223,4,DESK.depth),new MeshBasicMaterial());top.position.set(0,75,deskZ);desk.add(top);
+ const ladder=new Group();ladder.name='ladder';
+ for(const x of[-107.5,-61.5]){const rail=new Mesh(new BoxGeometry(4,210,5),new MeshBasicMaterial());rail.position.set(x,105,ladderZ);ladder.add(rail);}
+ for(let y=8;y<180;y+=35){const rung=new Mesh(new BoxGeometry(46,3,10),new MeshBasicMaterial());rung.position.set(-84.5,y,ladderZ);ladder.add(rung);}
+ const bounds=new Box3().setFromObject(chair);
+ near(bounds.min.x,-dimensions.roomWidth/2+2);
+ near(bounds.min.z-(deskZ+DESK.depth/2),2.5);
+ near(ladderZ-5-bounds.max.z,2.5);
+ near(placement.clearGap,65);
+ assert.deepEqual(findIntersections(chair,[desk,ladder]),[]);
+ assert.deepEqual(findIntersections(person,[desk,ladder]),[]);
 });
 test('relaxed seated body and chair clear five open treads',()=>{
   const placement=chairPlacement('tucked',dimensions,{occupied:true});

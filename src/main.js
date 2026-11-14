@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import './style.css';
+import {createStorageStair,setStorageDisplay,STORAGE_CONCEPT} from './storage-stair.js';
 import {createMonitor,createCornerLight,MONITOR,CORNER_LIGHT} from './fixtures.js';
 import {createCornerShelves,CORNER_SHELVES} from './corner-shelves.js';
 import {BATHROOM,bathroomLayout} from './bathroom.js';
@@ -9,6 +10,7 @@ import {createClosetLight,setClosetLight,CLOSET_LIGHT} from './closet-light.js';
 import {createRoomWalls,updateWallCutaway} from './walls.js';
 import { createHuman, HUMAN, STANDING_PROFILE } from './human.js';
 import { CHAIR, chairPlacement, createChair, findIntersections } from './chair.js';
+import {DESK} from './desk.js';
 const defaults={width:223,length:383,height:295,lower:170,deck:180,depth:140,rail:30,stairLength:120,stairWidth:50,closetWidth:100,closetDepth:60,closetHeight:211,closetEndGap:20,cabinetWidth:100,cabinetDepth:38,cabinetHeight:80,cabinetWallGap:5};
 defaults.closetGap=defaults.length-defaults.depth-defaults.closetWidth-defaults.closetEndGap;
 let values={...defaults};
@@ -23,7 +25,7 @@ const camera=new THREE.PerspectiveCamera(38,1,1,5000);camera.position.set(510,43
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.setClearColor('#e9ede6');viewport.prepend(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,125,0);controls.enableDamping=true;controls.maxDistance=1600;controls.minDistance=80;
 const ambient=new THREE.HemisphereLight(0xffffff,0x9b9986,2.6);scene.add(ambient);const sun=new THREE.DirectionalLight(0xfff4df,3);sun.position.set(150,600,300);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-400,right:400,top:400,bottom:-400,far:1200});sun.shadow.normalBias=0.3;scene.add(sun);
-let model=new THREE.Group();scene.add(model);let wallGroup,dimGroup,reservationGroup,furnitureGroup,chairGroup,closetLight;
+let model=new THREE.Group();scene.add(model);let wallGroup,dimGroup,reservationGroup,furnitureGroup,chairGroup,closetLight,storageStair;
 function box(w,h,d,x,y,z,color,opacity=1,parent=model){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.85,transparent:opacity<1,opacity,depthWrite:opacity===1}));mesh.position.set(x,y,z);mesh.castShadow=opacity===1;mesh.receiveShadow=true;parent.add(mesh);return mesh;}
 function line(points,color,parent=model,dashed=false){const geom=new THREE.BufferGeometry().setFromPoints(points.map(p=>new THREE.Vector3(...p)));const mat=dashed?new THREE.LineDashedMaterial({color,dashSize:5,gapSize:4}):new THREE.LineBasicMaterial({color});const l=new THREE.Line(geom,mat);l.computeLineDistances();parent.add(l);return l;}
 function label(text,x,y,z,color='#4c6554'){const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d');ctx.font='500 34px system-ui';const w=ctx.measureText(text).width;ctx.fillStyle='#fafbf3';ctx.beginPath();ctx.roundRect((512-w)/2-18,15,w+36,62,12);ctx.fill();ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(text,256,57);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false}));sprite.userData.text=text;sprite.position.set(x,y,z);sprite.scale.set(136,25.5,1);dimGroup.add(sprite);}
@@ -44,7 +46,7 @@ box(cd-4,4,cw-4,cx,2,cz,'#3b2e26',1,closet);
 // Mattress and pillow, with charcoal sidewall and pale linen.
 box(w-17,13,d-15,0,deck+8,back+d/2,'#494746');box(w-17,3,d-15,0,deck+16,back+d/2,'#e5dfd0');box(58,8,34,w/2-45,deck+22,back+28,'#e9d9c2');box(50,2,35,w/2-45,deck+19,front-35,'#6e8b9d');
 // Full-width desk with 6 cm legs and two 40 cm wide drawer cabinets.
-const deskWidth=w,dx=0,dz=back+36,deskDepth=59,leg=6;
+const deskWidth=w,dx=0,dz=back+DESK.centerFromBack,deskDepth=DESK.depth,leg=DESK.legThickness;
 box(deskWidth,4,deskDepth,dx,75,dz,'#70442c');
 for(const x of[-w/2+leg/2,w/2-leg/2])for(const z of[dz-deskDepth/2+leg/2,dz+deskDepth/2-leg/2])box(leg,73,leg,x,36.5,z,'#3d3933');
 const drawerWidth=40,drawerDepth=48,drawerHeight=60;
@@ -109,34 +111,17 @@ const steps=Number(document.querySelector('#step-count').value),rise=deck/(steps
 const x=-w/2+width/2,origin=side?front-run:front;
 const group=new THREE.Group();group.name='proposed-stair';model.add(group);
 const summary=document.querySelector('#stair-summary');
+storageStair=null;document.querySelector('#storage-controls').hidden=version!=='storage';
 if(version==='existing'){summary.textContent='Existing integrated ladder. No proposed stair.';return;}
-for(let i=0;i<steps;i++){
-const height=(steps-i)*rise;
 if(version==='storage'){
-box(width,height,going,x,height/2,origin+(i+.5)*going,'#a8794d',1,group);
-box(width,2,going,x,height-1,origin+(i+.5)*going,'#d6b080',1,group);
-
-}else{
-// Full-width wall-mounted treads, with illustrative brackets below.
-box(width,3,going,x,height-1.5,origin+(i+.5)*going,'#d6b080',1,group);
-const wallX=-w/2+1;
-box(2,Math.min(15,rise-3),Math.max(4,going-4),wallX,height-3-Math.min(15,rise-3)/2,origin+(i+.5)*going,'#454b44',1,group);
-box(Math.max(2,width-6),3,Math.max(3,going*.15),-w/2+(width-6)/2,height-5,origin+(i+.5)*going,'#454b44',1,group);
-
-}
-}
-// Three usable side-opening storage zones; stair tops remain fixed.
-if(version==='storage'){
-const faceX=x+width/2+.25;
-for(let section=0;section<3;section++){
-const first=Math.floor(section*steps/3),last=Math.floor((section+1)*steps/3)-1;
-const z0=origin+first*going+1,z1=origin+(last+1)*going-1;
-const top=(steps-last)*rise-4,bottom=3;
-// Broad door over several tread bays; stepped material above is fixed fascia.
-box(1,top-bottom,z1-z0,faceX,(top+bottom)/2,(z0+z1)/2,'#997047',1,group);
-line([[faceX+.6,bottom,z0],[faceX+.6,top,z0],[faceX+.6,top,z1],[faceX+.6,bottom,z1],[faceX+.6,bottom,z0]],'#5e4732',group);
-box(2,3,8,faceX+1.5,Math.min(top-5,(top+bottom)/2),z1-7,'#343c34',1,group);
-}
+ storageStair=createStorageStair({width:width-STORAGE_CONCEPT.wallClearance,run,deck,steps,display:document.querySelector('#storage-display').value});
+ storageStair.position.set(-w/2+STORAGE_CONCEPT.wallClearance,0,origin);storageStair.userData.reservedWidth=width;group.add(storageStair);updateStorageDetails();
+}else for(let i=0;i<steps;i++){
+ const height=(steps-i)*rise;
+ box(width,3,going,x,height-1.5,origin+(i+.5)*going,'#d6b080',1,group);
+ const wallX=-w/2+1;
+ box(2,Math.min(15,rise-3),Math.max(4,going-4),wallX,height-3-Math.min(15,rise-3)/2,origin+(i+.5)*going,'#454b44',1,group);
+ box(Math.max(2,width-6),3,Math.max(3,going*.15),-w/2+(width-6)/2,height-5,origin+(i+.5)*going,'#454b44',1,group);
 }
 function beam(a,b,radius,color){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,delta.length(),8),new THREE.MeshStandardMaterial({color}));mesh.position.copy(start).add(end).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());group.add(mesh);}
 
@@ -144,7 +129,13 @@ function beam(a,b,radius,color){const start=new THREE.Vector3(...a),end=new THRE
 const railX=-w/2+5;
 beam([railX,rise+70,origin+run-going/2],[railX,deck-rise+70,origin+going/2],1.8,'#39463d');
 for(const i of[0,Math.floor((steps-1)/2),steps-1]){const y=(steps-i)*rise+70,z=origin+(i+.5)*going;beam([-w/2+0.5,y,z],[railX,y,z],1.2,'#39463d');}
-summary.innerHTML=`<strong>${version==='storage'?'01 · Storage stair · 3 compartments':'02 · Wall-mounted frame stair'}</strong><br>${steps} treads + loft · ${steps+1} rises of ${rise.toFixed(1)} cm<br>${width} cm wide · ${going.toFixed(2)} cm going<br><span>Concept only · high steps (${rise.toFixed(1)} cm each), requiring a large lift, especially descending. Bottom approach is from the room side, with the closet limiting access at the end of the run. One wall-mounted handrail; room-side entry stays open. Existing ladder rails AND rungs stay in place in both versions.</span>`;
+summary.innerHTML=`<strong>${version==='storage'?'01 · Floor-supported storage stair':'02 · Wall-mounted frame stair'}</strong><br>${steps} treads + loft · ${steps+1} rises of ${rise.toFixed(1)} cm<br>${width} cm wide · ${going.toFixed(2)} cm going<br><span>Concept only · high steps (${rise.toFixed(1)} cm each), requiring a large lift, especially descending. Bottom approach is from the room side, with the closet limiting access at the end of the run. One wall-mounted handrail; room-side entry stays open. Existing ladder rails AND rungs stay in place in both versions.</span>${version==='storage'?'<span>Concept: tread supports → two side frames → posts/base → slab. Member sizes, welds, floor fixings and handrail anchors are unverified. No load rating. Storage blocks the tucked-chair position. The original chair position and the desk-to-ladder gap remain available.</span>':''}`;
+}
+function updateStorageDetails(){
+ if(!storageStair)return;
+ const display=storageStair.userData.display;
+ const openings=storageStair.userData.bays.map(b=>`${b.clearWidth.toFixed(0)} × ${b.clearHeight.toFixed(0)} × ${b.clearDepth.toFixed(0)}`).join(' / ');
+ document.querySelector('#storage-detail').textContent=`Body ${storageStair.userData.width} cm + ${STORAGE_CONCEPT.wallClearance} cm wall clearance; knobs add ${STORAGE_CONCEPT.hardwareProjection} cm into the room. Clear bays, W × H × D: ${openings} cm. ${display==='open'?'Two doors swing on continuous hinges; the retained low tray pulls out 24 cm. Open access needs extra room.':display==='frame'?'All wood, storage and hinge hardware hidden; tread tabs, posts, bracing and floor-fixing locations remain.':'Jointed timber plates wrap the frame. Visible knobs and a tray pull mark the three storage bays.'} Frame proportions are illustrative, not fabrication sizes.`;
 }
 function getChairPlacement(){return chairPlacement(chairPosition,{roomWidth:values.width,roomLength:values.length,loftDepth:values.depth},{occupied:document.querySelector('#human-mode').value.startsWith('seated-'),seatHeight:LOADED_SEAT_HEIGHT});}
 function markSeatedIntersections(person){
@@ -165,6 +156,9 @@ model.add(person);
 if(mode.startsWith('seated-'))chairGroup.visible=true;
 markSeatedIntersections(person);
 const headTop=new THREE.Box3().setFromObject(person.getObjectByName('head')).max.y;
+if(mode==='seated-ladder-desk'){
+ const p=getChairPlacement();summary.textContent=`Sitting between the 60 cm desk and original ladder, facing into the room. Modeled gap ${p.clearGap.toFixed(0)} cm; chair width 60 cm leaves ${p.deskClearance.toFixed(1)} cm each side. Head top ${headTop.toFixed(0)} cm. Desk position and chair depth remain estimates.`;return;
+}
 if(mode.startsWith('seated-')){summary.textContent=`Seated reference: shoulders 80 cm, just above ladder rung 3 (top 79.5 cm); head top ${headTop.toFixed(0)} cm, below rung 4 (underside 111.5 cm) and your 108 cm maximum. Normal sitting pose with feet on the floor. Cushion height is estimated.`;return;}
 summary.textContent=`${HUMAN.height} cm standing height · 25 cm feet. ${climbing?`Feet on steps ${person.userData.lowerStep} and ${person.userData.lowerStep+1}; articulated pose, not a climbing animation. ${person.userData.footOverhang>0?`Foot is ${person.userData.footOverhang.toFixed(1)} cm longer than the tread going. `:''}${headTop>values.height?`Head extends ${(headTop-values.height).toFixed(1)} cm above the ceiling in this pose.`:''}`:'Standing mid-room with longer legs and a shorter torso. Total height stays 169.5 cm; proportions are a visual estimate.'}`;
 }
@@ -175,7 +169,12 @@ function updateLighting(){
  if(closetLight)setClosetLight(closetLight,{enabled:true,brightness:1});
 
 }
-function rebuild(){values.closetGap=values.length-values.depth-values.closetWidth-values.closetEndGap;scene.remove(model);model.traverse(o=>{o.geometry?.dispose();if(o.material){o.material.map?.dispose();o.material.dispose();}});model=new THREE.Group();scene.add(model);wallGroup=new THREE.Group();dimGroup=new THREE.Group();reservationGroup=new THREE.Group();model.add(wallGroup,dimGroup,reservationGroup);
+function rebuild(){
+if(document.querySelector('#stair-version').value==='storage'&&chairPosition==='tucked'){
+ chairPosition='original';
+ if(document.querySelector('#human-mode').value==='seated-tucked')document.querySelector('#human-mode').value='seated-original';
+}
+values.closetGap=values.length-values.depth-values.closetWidth-values.closetEndGap;scene.remove(model);model.traverse(o=>{o.geometry?.dispose();if(o.material){o.material.map?.dispose();o.material.dispose();}});model=new THREE.Group();scene.add(model);wallGroup=new THREE.Group();dimGroup=new THREE.Group();reservationGroup=new THREE.Group();model.add(wallGroup,dimGroup,reservationGroup);
 for(const option of document.querySelector('#step-count').options)option.textContent=`${option.value} steps · ${(values.deck/(Number(option.value)+1)).toFixed(1)} cm rise`;
 const {width:w,length:l,height:h,lower,deck,depth:d,rail:r,stairLength:sl,stairWidth:sw}=values;const back=-l/2,front=back+d;
 box(w+12,6,l+12,0,-5,0,'#d0c7b7');box(w,2,l,0,-1,0,'#9b5c3d');
@@ -234,23 +233,28 @@ rebuild();view('stairs');
 document.querySelector('#human-mode').addEventListener('change',()=>{
 const mode=document.querySelector('#human-mode').value;
 if(mode==='storage'||mode==='alternating')document.querySelector('#stair-version').value=mode;
-if(mode.startsWith('seated-')){chairPosition=mode==='seated-tucked'?'tucked':'original';if(mode==='seated-tucked')document.querySelector('#stair-version').value='alternating';}
-rebuild();view(mode==='storage'||mode==='alternating'||mode==='seated-tucked'?'stairs':'perspective');
+if(mode.startsWith('seated-')){chairPosition=mode==='seated-tucked'?'tucked':mode==='seated-ladder-desk'?'ladder-desk':'original';if(mode==='seated-tucked')document.querySelector('#stair-version').value='alternating';}
+rebuild();view(mode==='storage'||mode==='alternating'||mode==='seated-tucked'||mode==='seated-ladder-desk'?'stairs':'perspective',mode==='seated-ladder-desk');
 });
 document.querySelector('#human-stage').addEventListener('input',rebuild);
+document.querySelector('#storage-display').addEventListener('change',()=>{if(storageStair){setStorageDisplay(storageStair,document.querySelector('#storage-display').value);updateStorageDetails();}view('stairs');});
 
-function view(name){
+function view(name,focusChair=false){
 activeView=name;
 const {width:w,length:l,height:h}=values;
 const climbingHuman=['storage','alternating'].includes(document.querySelector('#human-mode').value);
-camera.fov=name==='shelves'?60:name==='stairs'?(climbingHuman?85:70):38;
+const inspectingStorage=document.querySelector('#stair-version').value==='storage'&&!climbingHuman;
+const chairInDeskGap=focusChair&&document.querySelector('#human-mode').value==='seated-ladder-desk';
+camera.fov=name==='shelves'?60:name==='stairs'?(chairInDeskGap?60:climbingHuman?85:inspectingStorage?75:70):38;
 camera.updateProjectionMatrix();
 if(name==='shelves'){
  camera.position.set(-w/2+35,180,l/2-180);controls.target.set(w/2-20,145,l/2-40);
+}else if(name==='stairs'&&chairInDeskGap){
+ const p=getChairPlacement();controls.target.set(p.x,50,p.z);camera.position.set(10,155,-l/2+DESK.centerFromBack+10.5);
 }else if(name==='stairs'){
  const front=-l/2+values.depth;
- controls.target.set(-w/2+values.stairWidth/2,climbingHuman?150:values.deck*.5,front+values.stairLength*.5);
- camera.position.set(w/2-18,climbingHuman?185:145,front+values.stairLength*.65);
+ controls.target.set(-w/2+values.stairWidth/2,climbingHuman?150:inspectingStorage?values.deck*.42:values.deck*.5,front+values.stairLength*.5);
+ camera.position.set(inspectingStorage?w/2-40:w/2-18,climbingHuman?185:inspectingStorage?95:145,front+values.stairLength*(inspectingStorage?.93:.65));
 }else{
  const target=new THREE.Vector3(0,h*.43,0),distance=Math.max(w,l,h)*1.75;
  const offsets={perspective:[distance*.8,distance*.55,distance],reverse:[-distance*.7,distance*.42,-distance],top:[0,distance*1.4,.01]};
@@ -260,7 +264,7 @@ controls.update();
 document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
 }
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>view(b.dataset.view)));
-document.querySelector('#reset').onclick=()=>{values={...defaults};for(const key of Object.keys(values))document.getElementById(key)&&(document.getElementById(key).value=values[key]);document.querySelector('#stair-version').value='storage';document.querySelector('#step-count').value='5';document.querySelector('#human-mode').value='standing';chairPosition='tucked';document.querySelector('#human-stage').value='2';document.querySelector('#evening').checked=true;rebuild();view('perspective');};
-document.querySelector('#save').onclick=()=>{const data={units:'cm',measurements:values,lengthTolerance:5,upperClearHeight:values.height-values.deck,placement:'front',monitor:{...MONITOR,alwaysOn:true},cornerLight:{...CORNER_LIGHT,alwaysOn:true},cornerShelves:{...CORNER_SHELVES},entryDoor:{...ENTRY_DOOR,...entryDoorLayout({length:values.length,loftDepth:values.depth})},bathroomDoor:{...BATHROOM,...bathroomLayout({width:values.width,cabinetDepth:values.cabinetDepth,cabinetWallGap:values.cabinetWallGap})},closetBacklight:{...CLOSET_LIGHT,width:values.closetWidth,enabled:true,brightness:1,colorEstimated:true},existingLadder:{outsideWidth:50,rungHeight:3,clearGap:32,centerSpacing:35,firstRungCenter:8,firstRungCenterEstimated:true},stairVersion:document.querySelector('#stair-version').value,chair:{...CHAIR,position:chairPosition,fullDepthEstimated:true,loadedSeatHeight:LOADED_SEAT_HEIGHT,loadedSeatHeightEstimated:true,modeledWallGap:getChairPlacement().wallGap||0},human:{height:HUMAN.height,standingProportions:STANDING_PROFILE,spineLength:HUMAN.spineLength,seatedHeightLimit:HUMAN.seatedHeightLimit,seatedShoulderLimit:HUMAN.seatedShoulderLimit,footLength:HUMAN.footLength,mode:document.querySelector('#human-mode').value,stage:Number(document.querySelector('#human-stage').value)},desk:{width:values.width,depth:59,topHeight:77,legThickness:6,cabinetCount:2,cabinetWidth:40,cabinetDepth:48,cabinetHeight:60},stairGeometry:{treads:Number(document.querySelector('#step-count').value),risers:Number(document.querySelector('#step-count').value)+1,rise:values.deck/(Number(document.querySelector('#step-count').value)+1),going:values.stairLength/Number(document.querySelector('#step-count').value)},assumptions:['Loft spans back wall','Frame depth measured along room length','Deck thickness derived from deck elevation minus lower clear height','Rail included within upper clear height','Proposed stairs are spatial concepts, not fabrication drawings; existing ladder supports retained','Closet dimensions measured; front-left placement estimated from photos','Other furniture dimensions and positions are illustrative','Full room length corrected to 383 cm; original 242 cm was partial section']};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='room-measurements.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+document.querySelector('#reset').onclick=()=>{values={...defaults};for(const key of Object.keys(values))document.getElementById(key)&&(document.getElementById(key).value=values[key]);document.querySelector('#stair-version').value='storage';document.querySelector('#step-count').value='5';document.querySelector('#human-mode').value='standing';chairPosition='original';document.querySelector('#storage-display').value='closed';document.querySelector('#human-stage').value='2';document.querySelector('#evening').checked=true;rebuild();view('perspective');};
+document.querySelector('#save').onclick=()=>{const data={units:'cm',measurements:values,lengthTolerance:5,upperClearHeight:values.height-values.deck,placement:'front',monitor:{...MONITOR,alwaysOn:true},cornerLight:{...CORNER_LIGHT,alwaysOn:true},cornerShelves:{...CORNER_SHELVES},entryDoor:{...ENTRY_DOOR,...entryDoorLayout({length:values.length,loftDepth:values.depth})},bathroomDoor:{...BATHROOM,...bathroomLayout({width:values.width,cabinetDepth:values.cabinetDepth,cabinetWallGap:values.cabinetWallGap})},closetBacklight:{...CLOSET_LIGHT,width:values.closetWidth,enabled:true,brightness:1,colorEstimated:true},existingLadder:{outsideWidth:50,rungHeight:3,clearGap:32,centerSpacing:35,firstRungCenter:8,firstRungCenterEstimated:true},stairVersion:document.querySelector('#stair-version').value,chair:{...CHAIR,position:chairPosition,placement:getChairPlacement(),fullDepthEstimated:true,loadedSeatHeight:LOADED_SEAT_HEIGHT,loadedSeatHeightEstimated:true,modeledWallGap:getChairPlacement().wallGap||0},human:{height:HUMAN.height,standingProportions:STANDING_PROFILE,spineLength:HUMAN.spineLength,seatedHeightLimit:HUMAN.seatedHeightLimit,seatedShoulderLimit:HUMAN.seatedShoulderLimit,footLength:HUMAN.footLength,mode:document.querySelector('#human-mode').value,stage:Number(document.querySelector('#human-stage').value)},desk:{width:values.width,...DESK,cabinetCount:2,cabinetWidth:40,cabinetDepth:48,cabinetHeight:60},storageConcept:document.querySelector('#stair-version').value==='storage'?storageStair.userData:{...STORAGE_CONCEPT},stairGeometry:{treads:Number(document.querySelector('#step-count').value),risers:Number(document.querySelector('#step-count').value)+1,rise:values.deck/(Number(document.querySelector('#step-count').value)+1),going:values.stairLength/Number(document.querySelector('#step-count').value)},assumptions:['Loft spans back wall','Frame depth measured along room length','Deck thickness derived from deck elevation minus lower clear height','Rail included within upper clear height','Proposed stairs are spatial concepts, not fabrication drawings; existing ladder supports retained','Closet dimensions measured; front-left placement estimated from photos','Other furniture dimensions and positions are illustrative','Full room length corrected to 383 cm; original 242 cm was partial section']};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='room-measurements.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 new ResizeObserver(()=>{const w=viewport.clientWidth,h=viewport.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);}).observe(viewport);
-document.querySelector('#stair-version').value='alternating';rebuild();view('perspective');renderer.setAnimationLoop(()=>{controls.update();for(const item of dimGroup.children){if(item.isSprite){item.visible=activeView!=='stairs'||/Storage stair|Wall-mounted steps|cm gap|cm deck/.test(item.userData.text);const factor=Math.min(1,camera.position.distanceTo(item.position)/650);item.scale.set(136*factor,25.5*factor,1);}}updateWallCutaway(wallGroup,camera.position,{width:values.width,length:values.length,cutaway:document.querySelector('#cutaway').checked});renderer.render(scene,camera);});
+rebuild();view('stairs');renderer.setAnimationLoop(()=>{controls.update();for(const item of dimGroup.children){if(item.isSprite){item.visible=activeView!=='stairs'||/Storage stair|Wall-mounted steps|cm gap|cm deck/.test(item.userData.text);const factor=Math.min(1,camera.position.distanceTo(item.position)/650);item.scale.set(136*factor,25.5*factor,1);}}updateWallCutaway(wallGroup,camera.position,{width:values.width,length:values.length,cutaway:document.querySelector('#cutaway').checked});renderer.render(scene,camera);});

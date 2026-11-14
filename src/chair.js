@@ -1,11 +1,19 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import {DESK} from './desk.js';
 
 export const CHAIR = { width: 60, height: 69, seatHeight: 42, seatDepth: 47, depth: 60 };
 
 export function chairPlacement(position, { roomWidth, roomLength, loftDepth }, { occupied = false, seatHeight = 32 } = {}) {
   const front = -roomLength / 2 + loftDepth;
   const wallGap=0;
+  if(position==='ladder-desk'){
+    const deskEdge=-roomLength/2+DESK.centerFromBack+DESK.depth/2;
+    // Original ladder: 4 cm behind loft front; its rungs project 5 cm each way.
+    const ladderEdge=front-4-5,clearGap=ladderEdge-deskEdge,deskWallGap=2;
+    return {x:-roomWidth/2+CHAIR.depth/2+deskWallGap,z:(deskEdge+ladderEdge)/2,rotation:-Math.PI/2,wallGap:deskWallGap,
+      clearGap,deskClearance:(clearGap-CHAIR.width)/2,ladderClearance:(clearGap-CHAIR.width)/2};
+  }
   return position === 'tucked'
     ? { x: -roomWidth / 2 + CHAIR.depth / 2 + wallGap, z: front + CHAIR.width / 2 + 2, rotation: -Math.PI / 2, wallGap }
     : { x: roomWidth / 2 - 45, z: front + 25, rotation: 0 };

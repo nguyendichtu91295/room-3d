@@ -64,18 +64,18 @@ All dimensions are in centimetres.
 | Bathroom sliding entrance / wooden frame per side / outer width | 67 / 10 / 87 |
 | Drawer cabinet length × top depth × height | 100 × 38 × 80 |
 | Drawer cabinet top clearance from both corner walls | 5 |
-| Desk width / leg thickness | 223 / 6 |
+| Desk width × depth / leg thickness | 223 × 60 / 6 |
 | Under-desk cabinets | Two, each 40 cm wide |
 
 The tall closet is anchored 20 cm from the bathroom wall; its gap to the loft is derived from the remaining room length (123 cm). Its backlight follows the closet.
 
-The drawer cabinet top depth is confirmed at 38 cm; its body depth is modeled at an estimated 36 cm to retain the top overhang. Desk depth and height, and unmeasured furniture/door positions, are estimates based on room photos. Closet doors and handles project beyond its 60 cm body. A 10 cm deck/frame assembly is inferred from the 180 cm deck elevation and 170 cm lower clearance.
+The drawer cabinet top depth is confirmed at 38 cm; its body depth is modeled at an estimated 36 cm to retain the top overhang. Desk depth is confirmed at 60 cm; desk height and unmeasured furniture/door positions are estimates based on room photos. Closet doors and handles project beyond its 60 cm body. A 10 cm deck/frame assembly is inferred from the 180 cm deck elevation and 170 cm lower clearance.
 
 ## Stair versions
 
 Both proposed versions retain the complete original ladder/frame and use one wall-mounted handrail, leaving the room-facing side open. The 120 cm stair run ends 3 cm before the closet, so the approach is from the room side.
 
-1. **Storage stairs:** fixed walking treads above three broad side-opening storage compartments.
+1. **Storage stairs:** a floor-supported frame concept with tread crossmembers, stepped side frames, eight posts, base rails, bracing and three hollow side-access storage bays.
 2. **Wall-mounted steps:** full-width treads with illustrative wall brackets; no alternating treads or room-side stringer/handrail.
 3. **Existing ladder only:** hides proposed stairs while retaining the loft and original ladder.
 
@@ -120,7 +120,7 @@ Chrome debugging uses the persistent profile in `~/.cache/room-3d-chrome`, launc
 
 ## Green chair comparison
 
-Use the **Human reference** dropdown’s two sitting poses to place the chair in its original spot or beneath the higher wall-mounted steps. There are no separate Green chair controls. Standing, climbing and Remove human retain the last chair placement; reset returns it under the steps. **The chair faces into the room**, with its width running along the closet-to-loft gap beside the old ladder. User clarified that this width is about **60 cm**, superseding the product image's 63 cm. Rounded rectangular cushions, upholstery buttons, a pedestal and five-spoke base approximate the real chair.
+Use the **Human reference** dropdown’s three sitting poses to place the chair in its original spot, beneath the higher wall-mounted steps, or between the original ladder and desk. There are no separate Green chair controls. The storage stair occupies the tucked-chair space and puts the chair in its original room position. Selecting the tucked seated pose switches to wall-mounted steps. Reset also puts the chair in its original position with storage stairs. **The chair faces into the room**, with its width running along the closet-to-loft gap beside the old ladder. User clarified that this width is about **60 cm**, superseding the product image's 63 cm. Rounded rectangular cushions, upholstery buttons, a pedestal and five-spoke base approximate the real chair.
 
 Chair height 69 cm, seat height 42 cm and seat depth 47 cm are taken from the product screenshot. **Full chair/base depth is still estimated at 60 cm**, independent of the measured chair width. In the tucked position, the back is against the wall and the chair extends 10 cm beyond the 50 cm stair width.
 
@@ -157,3 +157,25 @@ Use the **Shelves** camera to inspect three wall-mounted shelves forming an L ar
 The short shelf underside clears the 160 cm light bar by 16.5 cm. The long boards stop 22 cm before the corner, leaving a 2 cm gap beyond the short shelf’s 20 cm footprint. The short board clears the modeled bathroom frame by 4 cm; the long boards start 13 cm beyond the entry frame. Concealed mounting is illustrative. Shelf dimensions are in `src/corner-shelves.js` and the JSON export. Furniture visibility also controls the shelves.
 
 The bathroom door is shown closed on a sliding track, with timber framing and a recessed pull. Its clear entrance is 67 cm; the 10 cm wooden frame is interpreted as per side, giving 87 cm overall. The frame sits 1 cm from the nearest edge of the cabinet top. Its position follows the confirmed 38 cm cabinet top depth and the 5 cm clearance from the right wall. The cabinet top also sits 5 cm from the end wall. The wall opening and JSON export use these same dimensions and placement from `src/bathroom.js`. Entrance height remains an estimated 210 cm, and panel appearance is illustrative.
+
+## Storage stair structure visualization
+
+The simulator starts with Storage stairs selected and its doors/tray closed. **Storage display** offers Closed, Open storage and Frame only. Open storage swings two doors 95° and extends the retained low tray by 24 cm. Frame only hides every timber component, doors, tray, hinges, catches and slides, leaving the load frame, tread fixing tabs, bracing and floor-fixing locations visible. Night view remains the default; untick it for brighter inspection.
+
+The load-path concept is tread → crossmembers → two stepped side frames/posts → floor-bearing base → concrete slab. Wall-side and end bracing remain visible inside the open cabinet. The original integrated ladder stays intact; its connection and the wall-side handrail fixings are unresolved.
+
+The finished cabinet body remains 48 cm wide, with 2 cm beside the skirting inside the 50 cm reservation. Steel is inset by 1.2 cm at each side for actual plywood skins, leaving a 45.6 cm steel envelope. Three separate front plates have 3 mm joints, visible fixing heads, veneer grain and laminated cut edges. Door fronts use a slightly darker timber tone. Stepped side sheets have real storage cutouts; fixed risers, end covers and opening liners conceal the steel for a solid timber appearance. Timber tread caps remain fixed walking surfaces. The model uses 4 cm frame profiles, 3.5 cm tread caps, 1.2 cm skins and 1.8 cm reinforced door panels only as **illustrative joinery dimensions**.
+
+Two visible round knobs and a bar handle on the tray project about 1.7 cm beyond the 48 cm body into the room; the envelope including handles is about 49.7 cm (51.7 cm including the wall gap). These are illustrative hardware dimensions. The two upper doors have continuous hinge barrels, mounting strips with bolt markers, carrier tabs, reinforced backing battens, catches/strikers and folding opening limiters. The hinge axis and recessed door faces allow for the finished wood surround. The lowest bay uses a tray with a bottom, sides and back, three-stage guide illustrations and retention stops. None of this hardware represents a selected or load-rated product. Actual mounting, wood movement, hinge specification and fastener engagement need fabrication detailing.
+
+Five-step clear openings (width × height × depth) are approximately 28 × 106 × 38, 34 × 46 × 38 and 30 × 16 × 38 cm. The tray's internal width is about 25 cm, depth 33 cm and lip height 9 cm. Doors need about 27–33 cm of space beyond the cabinet face; the tray travels 24 cm. At the loft end, a 2 cm visual clearance from the protruding original rungs shortens the highest tread's clear going from 24 to 22 cm. Other tread positions and the 180 cm loft level remain unchanged.
+
+Choosing storage stairs moves the chair to its original room position. JSON export includes the finished/steel envelopes, cladding allowance, hinges, bay sizes, tray travel and unresolved structural status. The user reports a concrete slab, an approximately 10 cm solid-brick wall and a maximum person weight to assess of 100 kg. **Capacity, steel wall thickness, welds, timber attachment, slab anchors and all connections remain unverified. This is a spatial concept, not fabrication drawings or a load rating.**
+
+Geometry tests in `tests/storage-stair.test.js` cover hollow openings, the closed footprint, cladding allowance, door swing clearance, retained tray motion, supports and unchanged structural frame. They do not establish strength.
+
+## Chair between desk and ladder
+
+Select **Sitting · between ladder & desk** in Human reference to move the green chair behind the original ladder, beneath the loft, facing into the room. No separate chair controls are added. This placement works alongside either proposed stair version and remains selected when changing storage inspection modes.
+
+The shared desk layout in `src/desk.js` uses the confirmed 60 cm depth. Its center remains an estimated 36 cm from the back wall. That places the desk front 66 cm from the back wall; the original rung's near face is at 131 cm. The modeled gap is 65 cm, leaving 2.5 cm on each side of the 60 cm wide chair. The chair also sits 2 cm off the left wall to clear the skirting. Chair full depth and desk position remain estimates; the mannequin uses the same seated proportions and 32 cm loaded cushion height. The camera shows this pose automatically, and JSON export includes the position and clearances.

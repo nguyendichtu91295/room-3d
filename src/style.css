@@ -7,3 +7,5 @@
 [hidden]{display:none!important}#human-stage{width:105px;accent-color:#447b9b}#human-mode{max-width:190px}
 
 footer{flex-wrap:wrap}
+
+#storage-controls{padding:10px;background:#edf0e9;border:1px solid #dce3d7;border-radius:6px;margin-top:12px}#storage-controls .select{margin-top:0}#storage-detail{line-height:1.6;margin-bottom:0}
