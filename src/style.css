@@ -5,3 +5,5 @@
 .stair-summary{font-size:11px;line-height:1.7;padding:12px;background:#e7ede3;border-radius:6px;margin:12px 0}.stair-summary strong{font-size:12px}.stair-summary span{display:block;color:#6b7768;font-size:10px;margin-top:6px}
 
 [hidden]{display:none!important}#human-stage{width:105px;accent-color:#447b9b}#human-mode{max-width:190px}
+
+footer{flex-wrap:wrap}
